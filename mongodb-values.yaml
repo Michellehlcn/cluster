@@ -1,0 +1,13 @@
+volumePermissions:
+  enabled: true
+debug: true
+auth:
+  rootPassword: "myrootpassword"
+  username: "admin"
+  password: "mypassword"
+  database: "bfa-db"
+persistence:
+  enabled: true
+  existingClaim: "pvc-mongodb-devops-databases"
+  storageClass: "nfs-client"
+  size: 1Gi

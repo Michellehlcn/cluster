@@ -1,0 +1,5 @@
+mongodb/*
+terraform.tfstate
+.terraform.lock.hcl
+mongodb-15.6.16.tgz
+infra/.terraform/*
