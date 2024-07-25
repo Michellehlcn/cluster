@@ -38,12 +38,15 @@ def generate_document():
 
 def insert_or_update_document(document):
     query = {"name": document["t"]}
-    existing_doc = collection.find_one(query)
+    try: 
+        existing_doc = collection.find_one(query)
 
-    if existing_doc:
-        collection.update_one(query, {"$set": {"mod_timestamp": document["msg"]}})
-    else:
-        collection.insert_one(document)
+        if existing_doc:
+            collection.update_one(query, {"$set": {"mod_timestamp": document["msg"]}})
+        else:
+            collection.insert_one(document)
+    except Exception as e:
+        print(f"Error: {e}")
 
 def main():
     global client

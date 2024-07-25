@@ -1,4 +1,5 @@
 # 1. Kind Cluster Installation 
+### Prerequisites
 ```
 brew install kind
 brew install helm
@@ -35,49 +36,43 @@ docker ps
 sudo kubectl get nodes
 ```
 
-# Deploy MongoDB standalone using the Helm chart from Bitnami on the Kind cluster.
-### set name space
+# 2. Deploy MongoDB standalone using the Helm chart from Bitnami on the Kind cluster.
+### Set name space
 ```
 sudo kubectl create namespace devops-database
 sudo kubectl config set-context --current --namespace=devops-database
 ```
 
-### install MongoDB standalone using default configuration
+### Install MongoDB standalone using default configuration
 ```
 sudo helm install my-release oci://registry-1.docker.io/bitnamicharts/mongodb
 ```
 
-### install MongoDB standalone using custom configuration
-# 2. Deploy MongoDB standalone using the Helm chart from Bitnami on the Kind cluster.
+### Install MongoDB standalone using custom configuration
+
 ```
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
 helm pull bitnami/mongodb
 tar -xvzf mongodb*.tgz
-```
-### set name space
-```
 sudo kubectl config set-context --current --namespace=devops-database
-```
-### install
-```
 helm install mongodb-dev mongodb/ -f mongodb-values.yml  
 ```
 
-### get the password run
+### Get the password run
 ```
 export MONGODB_ROOT_PASSWORD=$(sudo kubectl get secret --namespace devops-database my-release-mongodb -o jsonpath="{.data.mongodb-root-password}" | base64 -d)
 ```
-### if needed, edit secret & add username (use vim)
+### If needed, edit secret & add username (use vim)
 ```
 sudo kubectl edit secret --namespace devops-database my-release-mongodb
 ```
 
-### check pods
+### Check pods
 ```
 sudo kubectl get pod -o wide
 ```
-### connect DB 
+### Connect DB 
 ```
 sudo kubectl get pod my-release-mongodb-77cd8958f6-6lxzs  --template='{{(index (index .spec.containers 0).ports 0).containerPort}}{{"\n"}}'
 ```
@@ -85,41 +80,43 @@ sudo kubectl get pod my-release-mongodb-77cd8958f6-6lxzs  --template='{{(index (
 ```
 sudo kubectl port-forward my-release-mongodb-77cd8958f6-6lxzs 28015:27017
 ```
-### Connect from the local machine.
+### Connect from the local machine. 
 ```
 mongosh --host localhost --port 28015 -u root -p $MONGODB_ROOT_PASSWORD
 ```
 
-<!-- # NAME                                  READY   STATUS    RESTARTS   AGE
-# my-release-mongodb-77cd8958f6-7vdx5   1/1     Running   0          7m7s -->
+```
+NAME                                  READY   STATUS    RESTARTS   AGE
+my-release-mongodb-77cd8958f6-7vdx5   1/1     Running   0          7m7s
+```
+
+---------- RESULTS
+```
+NAME: my-release
+LAST DEPLOYED: Thu Jul 25 22:15:35 2024
+NAMESPACE: devops-database
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+CHART NAME: mongodb
+CHART VERSION: 15.6.16
+APP VERSION: 7.0.12
+
+ ** Please be patient while the chart is being deployed **
+
+ MongoDB&reg; can be accessed on the following DNS name(s) and ports from within your cluster:
+
+     my-release-mongodb.devops-database.svc.cluster.local
+
+To get the root password run:
+
+    export MONGODB_ROOT_PASSWORD=$(kubectl get secret --namespace devops-database my-release-mongodb -o jsonpath="{.data.mongodb-root-password}" | base64 -d)
+
+```
 
 
-<!------------ RESULTS
-# NAME: my-release
-# LAST DEPLOYED: Thu Jul 25 22:15:35 2024
-# NAMESPACE: devops-database
-# STATUS: deployed
-# REVISION: 1
-# TEST SUITE: None
-# NOTES:
-# CHART NAME: mongodb
-# CHART VERSION: 15.6.16
-# APP VERSION: 7.0.12
-
-# ** Please be patient while the chart is being deployed **
-
-# MongoDB&reg; can be accessed on the following DNS name(s) and ports from within your cluster:
-
-#     my-release-mongodb.devops-database.svc.cluster.local
-
-# To get the root password run:
-
-#     export MONGODB_ROOT_PASSWORD=$(kubectl get secret --namespace devops-database my-release-mongodb -o jsonpath="{.data.mongodb-root-password}" | base64 -d)
-
-# ``` -->
-
-
-#----Test using Mongosh shell script
+### Test using Mongosh shell script
 ```
 test> show dbs
 ```
@@ -145,7 +142,12 @@ test> db.blogs.find()
 python3 release_info.py -u root -p $MONGODB_ROOT_PASSWORD -s test -t v1.0 
 ```
 
-- How would you handle errors related to MongoDB connectivity or document insertion in your script?
-- Explain the importance of using Helm charts for deploying applications like MongoDB in Kubernetes.
-- Describe a solution where the script requested above is integrated into.
-- Explain your thought process and how you could improve the script to improve your use case.
+- Handle errors related to MongoDB connectivity or document insertion in the script
+The argparse will handle the suffice details for connecting to MongoDB
+First we should check if the document exists in the database, if not we throw an exception, otherwise directly save the document
+
+- The importance of using Helm charts for deploying applications like MongoDB in Kubernetes.
+Helm charts support versioning, allowing developers to version their application deployments and configuration changes. This feature facilitates easy rollbacks to previous versions if anything goes wrong, enhancing deployment reliability. The rolling back feature is important if there are any incident problems with deployment configuration. Helm creates abstractions between the app developer and sysop deployment. Perfect if you don't want to know the details of deploying ingress etc.
+
+- Solution where the script requested above is integrated into Explain your thought process and how you could improve the script to improve your use case.
+Need to combined with a different action script, to manifest the timestamp of deploymment, or integrate in the helm chart configuration using customized yml files
